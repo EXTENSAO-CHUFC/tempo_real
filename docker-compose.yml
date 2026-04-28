@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  kafka1:
+    image: apache/kafka:3.7.0
+    container_name: kafka1
+    user: root
+    ports:
+      - "19090:19090"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:19090,CONTROLLER://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092,EXTERNAL://localhost:19090
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9094,2@kafka2:9094,3@kafka3:9094
+      CLUSTER_ID: c1efea27-733e-4c6a-94c0-67e69f5adfea
+    volumes:
+      - kafka1-data:/tmp/kafka-logs
+
+  kafka2:
+    image: apache/kafka:3.7.0
+    container_name: kafka2
+    user: root
+    ports:
+      - "19091:19091"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:19091,CONTROLLER://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9092,EXTERNAL://localhost:19091
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9094,2@kafka2:9094,3@kafka3:9094
+      CLUSTER_ID: c1efea27-733e-4c6a-94c0-67e69f5adfea
+    volumes:
+      - kafka2-data:/tmp/kafka-logs
+
+  kafka3:
+    image: apache/kafka:3.7.0
+    container_name: kafka3
+    user: root
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:19092,CONTROLLER://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka3:9092,EXTERNAL://localhost:19092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9094,2@kafka2:9094,3@kafka3:9094
+      CLUSTER_ID: c1efea27-733e-4c6a-94c0-67e69f5adfea
+    volumes:
+      - kafka3-data:/tmp/kafka-logs
+
+volumes:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:
