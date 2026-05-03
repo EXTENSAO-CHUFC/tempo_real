@@ -1,0 +1,7 @@
+# Dependências 
+
+# Cliente Kafka moderno e puramente em Python (compatível com Python 3.12+)
+kafka-python-ng==2.2.2
+
+# Driver PostgreSQL (versão binary recomendada para evitar erros de compilação C/C++ no Windows)
+psycopg2-binary==2.9.9
