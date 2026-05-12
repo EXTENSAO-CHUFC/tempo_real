@@ -1,8 +1,8 @@
-import json
+""" import json
 import os
 from kafka import KafkaConsumer
 
-"""Pequeno teste inicial para certificar se os containers estão funcionando. Consiste em uma integração entre um banco de dados gerado a partir de uma imagem do Postgres por meio do Docker e o Kafka como sistema de mensageria para uma monitoração em tempo real da retirada ou recebimento de medicamentos de um estoque ficticio. Producer(Extrator dos dados do DB) -> Kafka (garantindo que a mensagem chegue) -> Consumer(Monitor em tempo real), atuando como um painel de monitoramento que lê as mensagens do tópico e exibe as entradas e saídas instantaneamente no terminal."""
+Pequeno teste inicial para certificar se os containers estão funcionando. Consiste em uma integração entre um banco de dados gerado a partir de uma imagem do Postgres por meio do Docker e o Kafka como sistema de mensageria para uma monitoração em tempo real da retirada ou recebimento de medicamentos de um estoque ficticio. Producer(Extrator dos dados do DB) -> Kafka (garantindo que a mensagem chegue) -> Consumer(Monitor em tempo real), atuando como um painel de monitoramento que lê as mensagens do tópico e exibe as entradas e saídas instantaneamente no terminal.
 
 consumer = KafkaConsumer(
     'teste', 
@@ -50,4 +50,4 @@ except KeyboardInterrupt:
     print("\n Monitoramento encerrado pelo usuário.")
 finally:
     consumer.close()
-    print(" Conexão encerrada com segurança.")
+    print(" Conexão encerrada com segurança.")"""
