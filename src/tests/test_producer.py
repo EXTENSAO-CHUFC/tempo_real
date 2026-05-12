@@ -1,10 +1,10 @@
-import json
+""" import json
 import time
 import psycopg2
 from kafka import KafkaProducer
 from psycopg2.extras import RealDictCursor
 
-"""Pequeno teste inicial para certificar se os containers estão funcionando. Consiste em uma integração entre um banco de dados gerado a partir de uma imagem do Postgres por meio do Docker e o Kafka como sistema de mensageria para uma monitoração em tempo real da retirada ou recebimento de medicamentos de um estoque ficticio. Producer(Extrator dos dados do DB) -> Kafka (garantindo que a mensagem chegue) -> Consumer(Monitor em tempo real), atuando como um painel de monitoramento que lê as mensagens do tópico e exibe as entradas e saídas instantaneamente no terminal."""
+Pequeno teste inicial para certificar se os containers estão funcionando. Consiste em uma integração entre um banco de dados gerado a partir de uma imagem do Postgres por meio do Docker e o Kafka como sistema de mensageria para uma monitoração em tempo real da retirada ou recebimento de medicamentos de um estoque ficticio. Producer(Extrator dos dados do DB) -> Kafka (garantindo que a mensagem chegue) -> Consumer(Monitor em tempo real), atuando como um painel de monitoramento que lê as mensagens do tópico e exibe as entradas e saídas instantaneamente no terminal.
 
 producer = KafkaProducer(
     bootstrap_servers=['localhost:19090', 'localhost:19091', 'localhost:19092'],
@@ -65,4 +65,4 @@ try:
             time.sleep(5) #vai esperar 5 segundos antes de checar o banco novamente
 
 except KeyboardInterrupt:
-    print("\n Extrator desligado.")
+    print("\n Extrator desligado.")"""
