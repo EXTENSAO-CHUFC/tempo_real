@@ -1,7 +1,13 @@
-# Dependências 
+# --- BANCO DE DADOS ---
+sqlalchemy
 
-# Cliente Kafka moderno e puramente em Python (compatível com Python 3.12+)
-kafka-python-ng==2.2.2
+# --- MENSAGERIA E CACHE ---
+kafka-python
+redis
 
-# Driver PostgreSQL (versão binary recomendada para evitar erros de compilação C/C++ no Windows)
-psycopg2-binary==2.9.9
+# --- VARIÁVEIS DE AMBIENTE ---
+python-dotenv
+
+# --- DASHBOARD E DADOS ---
+streamlit
+pandas

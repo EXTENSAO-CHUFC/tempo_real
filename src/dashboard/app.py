@@ -3,6 +3,9 @@ import pandas as pd
 import sys
 import os
 import time
+import redis
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from db.connection import SessionLocal
@@ -12,15 +15,22 @@ from db.models import EstoqueMedicamento
 st.set_page_config(page_title="Monitor Farmácia CH-UFC", page_icon="🏥", layout="wide")
 
 def carregar_dados():
-    """Conecta no banco via MVC e traz o estoque atualizado."""
+    """Conecta no Postgres para dados estáticos e no REDIS para os dados em tempo real."""
     db = SessionLocal()
     try:
         medicamentos = db.query(EstoqueMedicamento).all()
         dados = []
         for med in medicamentos:
+            estoque_redis = redis_client.get(f"estoque:{med.id}")
+            if estoque_redis is not None:
+                estoque_atual = int(estoque_redis)
+            else:
+                estoque_atual = med.estoque_atual
+                
             dados.append({
+                "ID": med.id,
                 "Medicamento": med.medicamento,
-                "Estoque Atual": med.estoque_atual,
+                "Estoque Atual": estoque_atual, 
                 "Estoque Máximo": med.estoque_maximo
             })
         return pd.DataFrame(dados)
