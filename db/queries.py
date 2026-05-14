@@ -1,5 +1,8 @@
 from sqlalchemy.orm import Session
 from db.models import EstoqueMedicamento
+import redis
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 def popular_estoque_inicial(db: Session):
     medicamentos_iniciais = [
@@ -22,4 +25,13 @@ def popular_estoque_inicial(db: Session):
             print(f"⏩ Ignorado (já existe): {item['medicamento']}")
             
     db.commit()
-    print("\n✅ Carga inicial de medicamentos concluída com sucesso!")
+
+    print("⚡ Sincronizando dados com o cache em memória (Redis)...")
+    todos_meds = db.query(EstoqueMedicamento).all()
+    for med in todos_meds:
+        redis_client.set(f"estoque:{med.id}", med.estoque_atual)
+   
+        
+    print("\n📦 Operação de estoque e cache concluída com sucesso!")
+
+   

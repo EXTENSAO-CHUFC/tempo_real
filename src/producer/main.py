@@ -9,9 +9,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from db.connection import SessionLocal
 
 
-from extract import simular_requisicao
-from transform import preparar_mensagem_kafka
-from checkpoint import atualizar_estoque_banco
+from src.producer.extract import simular_requisicao
+from src.producer.transform import preparar_mensagem_kafka
+from src.producer.checkpoint import atualizar_estoque_banco
 
 def run_producer():
     producer = KafkaProducer(
@@ -35,15 +35,15 @@ def run_producer():
                     producer.send('teste', value=evento_pronto)
                     producer.flush() 
                     
-                    print(f"📤 [KAFKA] Enviado: {evento_pronto['quantidade']} unidades de {evento_pronto['medicamento']}")
+                    print(f" [KAFKA] Enviado: {evento_pronto['quantidade']} unidades de {evento_pronto['medicamento']}")
 
                     # Atualiza o Banco de Dados
                     atualizar_estoque_banco(db, evento_pronto['id_medicamento'], evento_pronto['quantidade'])
-                    print(f"💾 [BANCO] Estoque atualizado!")
+                    print(f" [BANCO] Estoque atualizado!")
                     print("-" * 40)
 
                 else:
-                    print("⚠️ Todos os estoques estão zerados! Aguardando reposição...")
+                    print(" Todos os estoques estão zerados! Aguardando reposição...")
 
             finally:
                 db.close() 
@@ -52,7 +52,7 @@ def run_producer():
             time.sleep(3) 
 
     except KeyboardInterrupt:
-        print("\n🛑 Simulador desligado com sucesso.")
+        print("\n Simulador desligado com sucesso.")
 
 if __name__ == "__main__":
     run_producer()
