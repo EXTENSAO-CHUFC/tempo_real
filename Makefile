@@ -9,15 +9,15 @@
 # ==============================
 
 run:
-	@echo "🚀 Chamando o orquestrador para iniciar o sistema..."
+	@echo " Chamando o orquestrador para iniciar o sistema..."
 	python iniciar.py
 
 stop:
-	@echo "🛑 Chamando o orquestrador para desligar o sistema..."
+	@echo " Chamando o orquestrador para desligar o sistema..."
 	python encerrar.py
 
 restart:
-	@echo "🔄 Reiniciando o sistema..."
+	@echo " Reiniciando o sistema..."
 	$(MAKE) stop
 	@echo "Aguardando desligamento completo..."
 	sleep 3
@@ -28,11 +28,11 @@ restart:
 # ==============================
 
 infra-up:
-	@echo "🐳 Subindo apenas os bancos e a mensageria (Postgres, Redis, Kafka)..."
+	@echo " Subindo apenas os bancos e a mensageria (Postgres, Redis, Kafka)..."
 	docker-compose up -d
 
 infra-down:
-	@echo "🛑 Desligando a infraestrutura..."
+	@echo " Desligando a infraestrutura..."
 	docker-compose down
 
 
@@ -41,32 +41,32 @@ infra-down:
 # ==============================
 
 clean:
-	@echo "🧹 Destruindo os volumes e limpando dados do banco e cache..."
+	@echo " Destruindo os volumes e limpando dados do banco e cache..."
 	docker-compose down -v
-	@echo "✅ Limpeza profunda concluída. Os bancos estão zerados."
+	@echo " Limpeza profunda concluída. Os bancos estão zerados."
 
 # ==============================
 # GIT
 # ==============================
 
 git-status:
-	@echo "📌 Status do Git"
+	@echo " Status do Git"
 	git status
 
 git-add:
-	@echo "➕ Adicionando arquivos"
+	@echo " Adicionando arquivos"
 	git add .
 
 git-commit:
-	@echo "📝 Commitando alterações"
+	@echo " Commitando alterações"
 	git commit -m "update: nova versão do projeto"
 
 git-push:
-	@echo "🚀 Enviando para o GitHub"
+	@echo " Enviando para o GitHub"
 	git push origin main
 
 git-all:
-	@echo "🚀 Subindo versão completa..."
+	@echo " Subindo versão completa..."
 	git status
 	git add .
 	git commit -m "$(msg)"
@@ -101,7 +101,7 @@ git-new-branch:
 
 help:
 	@echo ""
-	@echo "📌 Comandos disponíveis para o Monitoramento CH-UFC:"
+	@echo " Comandos disponíveis para o Monitoramento CH-UFC:"
 	@echo ""
 	@echo "--- OPERAÇÃO PRINCIPAL ---"
 	@echo "make run           → Inicia todo o sistema (Docker, Carga, Painel e Robôs)"
