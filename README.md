@@ -77,10 +77,48 @@ tempo_real/
 
 ### Pré-requisitos
 
-- [Python 3.12+](https://www.python.org/downloads/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Poetry](https://python-poetry.org/docs/#installation)
 
+### Clonar o repositório
+```powershell
+git clone <https://github.com/EXTENSAO-CHUFC/tempo_real.git>
+```
+### Instalar o pyenv e o Python 3.12
+
+O pyenv permite gerenciar múltiplas versões do Python sem conflitos. O projeto requer Python 3.12+ (versão exata: `3.12.10`, conforme o arquivo `.python-version`).
+
+#### Windows
+
+No Windows, utilize o [pyenv-win](https://github.com/pyenv-win/pyenv-win):
+
+```powershell
+# Instalar via PowerShell (como Administrador)
+Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"; &"./install-pyenv-win.ps1"
+```
+
+Reinicie o terminal e execute:
+
+```powershell
+# Instalar a versão do Python usada no projeto
+pyenv install 3.12.10
+pyenv local 3.12.10
+```
+
+### Instalar o Poetry
+
+O Poetry é o gerenciador de dependências e ambiente virtual do projeto.
+
+#### Windows
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -3 -
+```
+
+Após a instalação, reinicie o terminal e verifique:
+
+```bash
+poetry --version
+``` 
 ### 1. Configurar as Variáveis de Ambiente
 
 Copie o arquivo de exemplo e ajuste os valores se necessário:
