@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+""" from sqlalchemy.orm import Session
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -13,4 +13,4 @@ def atualizar_estoque_banco(db: Session, id_medicamento: int, qtd_retirada: int)
         db.commit() 
         return True
         
-    return False
+    return False"""

@@ -1,0 +1,23 @@
+[project]
+name = "tempo-real"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "David Vaz",email = "vazdavid460@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "sqlalchemy (>=2.0.50,<3.0.0)",
+    "redis (>=7.4.0,<8.0.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)",
+    "streamlit (>=1.57.0,<2.0.0)",
+    "pandas (>=3.0.3,<4.0.0)",
+    "kafka-python-ng (>=2.2.3,<3.0.0)",
+    "psycopg2-binary (>=2.9.12,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
