@@ -1,9 +1,9 @@
 
 
-![alt text](logo-huwc-Photoroom.png)
+![alt text](src/utils/logo-huwc-Photoroom.png)
 # 🏥 Monitor de Farmácia em Tempo Real (CH-UFC)
 ![Status](https://img.shields.io/badge/Status-MVP%20Concluído-success)
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Python](https://img.shields.io/badge/Python-3.12+-blue)
 ![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED)
 ![Kafka](https://img.shields.io/badge/Apache_Kafka-Streaming-black)
 ![Redis](https://img.shields.io/badge/Redis-In--Memory_Cache-red)
@@ -33,48 +33,108 @@ O fluxo de dados segue o padrão de streaming:
 5. **Armazenamento Transacional:** O estado consolidado e o catálogo mestre repousam no **PostgreSQL**, acessado via SQLAlchemy.
 
 ---
-## ⚙️ Como executar o ambiente
+## 📁 Estrutura do Projeto
 
-### 1. Preparar as Credenciais
-Crie um arquivo chamado `.env` na raiz do projeto e adicione as credenciais do banco de dados:
-```env
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=adminpassword
-POSTGRES_DB=farmacia_db
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5433
 ```
-### 2. Instalar o Docker
-- Acesse o site oficial: [Baixar Docker Desktop](https://www.docker.com/products/docker-desktop/)
-### 3. Configurar o Ambiente
+tempo_real/
+├── db/                    # Scripts de banco (modelos, conexão, carga inicial)
+├── deploy/                # Configurações de deploy (Dockerfile, render.yaml)
+├── docs/                  # Documentação complementar
+├── logs/                  # Logs de execução (producer, consumer, erros)
+├── src/
+│   ├── api/               # API REST (em desenvolvimento)
+│   ├── config/            # Configurações centralizadas (settings.py)
+│   ├── consumers/         # Consumidores Kafka (redis_cache, historico, monitoramento)
+│   ├── dashboard/         # Dashboard Streamlit (app.py)
+│   ├── jobs/              # Tarefas agendadas (em desenvolvimento)
+│   ├── models/            # Modelos de domínio (em desenvolvimento)
+│   ├── producer/          # Produtor Kafka (simulador de retiradas)
+│   ├── tests/             # Testes automatizados
+│   └── utils/             # Utilitários (Kafka, Redis, DB helpers)
+├── docker-compose.yml     # Orquestração dos contêineres
+├── iniciar.py             # Orquestrador de inicialização
+├── encerrar.py            # Orquestrador de encerramento
+├── Makefile               # Atalhos de comandos
+└── pyproject.toml         # Dependências e metadados (Poetry)
 ```
-# Crie e ative o ambiente virtual (Windows)
-python -m venv venv
-venv\Scripts\activate
 
-# Instale os pacotes
-pip install -r requirements.txt
+---
+
+## 🔌 Portas e Serviços
+
+| Serviço | Porta | Descrição |
+|---------|-------|-----------|
+| PostgreSQL | `5433` | Banco de dados transacional (mapeado do 5432 interno) |
+| Redis | `6379` | Cache em memória para leitura rápida do dashboard |
+| Kafka Broker 1 | `19090` | Broker principal do cluster Kafka |
+| Kafka Broker 2 | `19091` | Broker réplica do cluster Kafka |
+| Kafka Broker 3 | `19092` | Broker réplica do cluster Kafka |
+| Streamlit | `8501` | Dashboard web (aberto automaticamente no navegador) |
+
+---
+
+## ⚙️ Como Executar o Ambiente
+
+### Pré-requisitos
+
+- [Python 3.12+](https://www.python.org/downloads/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Poetry](https://python-poetry.org/docs/#installation)
+
+### 1. Configurar as Variáveis de Ambiente
+
+Copie o arquivo de exemplo e ajuste os valores se necessário:
+
+```bash
+cp .env.example .env
 ```
-### 4. Executar o Arquivo para iniciar 
+
+As variáveis padrão já funcionam com o `docker-compose.yml` fornecido.
+
+### 2. Instalar as Dependências
+
+```bash
+poetry install
 ```
-# Iniciar o sistema utilizando Windows
+
+O Poetry criará o ambiente virtual e instalará todos os pacotes automaticamente.
+
+### 3. Iniciar o Sistema
+
+```bash
+# Windows (CMD ou PowerShell)
 mingw32-make run
-# Iniciar o sistema utilizando Linux
+
+# Linux/macOS
 make run
 ```
-### 5. Finalizar com o arquivo encerrar.py
-```
-# Encerrar o sistema utilizando Windows
+
+> ⚠️ **Nota:** O script `iniciar.py` utiliza comandos específicos do Windows (`os.system('start ...')`) para abrir terminais separados. Execução nativa em Linux/macOS requer adaptação desse script.
+
+### 4. Encerrar o Sistema
+
+```bash
+# Windows
 mingw32-make stop
-# Encerrar o sistema utilizando Linux
+
+# Linux/macOS
 make stop
 ```
-## ⚠️ Limpar os volumes:
-```
-# Windows
-mingw32-make clean
-# Linux
-make clean
-```
+
+### Comandos Disponíveis (Makefile)
+
+| Comando (Linux) | Comando (Windows) | Descrição |
+|-----------------|-------------------|-----------|
+| `make run` | `mingw32-make run` | Inicia todo o sistema (Docker, Carga, Painel e Robôs) |
+| `make stop` | `mingw32-make stop` | Desliga o sistema com segurança |
+| `make restart` | `mingw32-make restart` | Reinicia o sistema (stop + run) |
+| `make infra-up` | `mingw32-make infra-up` | Sobe apenas os contêineres (Postgres, Redis, Kafka) |
+| `make infra-down` | `mingw32-make infra-down` | Desliga apenas os contêineres |
+| `make clean` | `mingw32-make clean` | ⚠️ Deleta volumes e zera todos os dados (Hard Reset) |
+| `make help` | `mingw32-make help` | Lista todos os comandos disponíveis |
+
+---
+
 ## 👨‍💻 Autor
+
 Francisco David Vaz de Sousa

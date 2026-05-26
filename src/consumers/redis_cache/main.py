@@ -1,10 +1,11 @@
 from src.utils.kafka import get_kafka_consumer
 from src.utils.redis_client import get_redis_client
+from src.config.settings import settings
 
 def run_redis_consumer():
     # Instanciamento limpo usando Utils
     redis_client = get_redis_client()
-    consumer = get_kafka_consumer(topic='teste', group_id=None)
+    consumer = get_kafka_consumer(topic=settings.KAFKA_TOPIC_MOVIMENTACAO, group_id=None)
 
     print("Consumidor Redis iniciado!")
     print("Ouvindo mensagens do Kafka para atualizar o cache em tempo real...\n")

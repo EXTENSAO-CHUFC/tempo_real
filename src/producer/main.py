@@ -3,6 +3,7 @@ from src.utils.kafka import get_kafka_producer
 from src.utils.db import get_db_session
 from src.producer.extract import simular_requisicao
 from src.producer.transform import preparar_mensagem_kafka
+from src.config.settings import settings
 
 def run_producer():
     # Inicialização limpa via utils
@@ -25,8 +26,8 @@ def run_producer():
                     evento_pronto = preparar_mensagem_kafka(evento_bruto)
 
                     # 3. LOAD (Apenas Kafka, fim do dual-write)
-                    producer.send('teste', value=evento_pronto)
-                    producer.flush() 
+                    producer.send(settings.KAFKA_TOPIC_MOVIMENTACAO, value=evento_pronto)
+                    producer.flush()  
                     
                     print(f"[KAFKA] Enviado: {evento_pronto['quantidade']} unidades de {evento_pronto['medicamento']}")
                     print("-" * 40)
