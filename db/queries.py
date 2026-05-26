@@ -6,11 +6,11 @@ redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=T
 
 def popular_estoque_inicial(db: Session):
     medicamentos_iniciais = [
-        {"medicamento": "Dipirona Sódica 500mg", "estoque_atual": 1000, "estoque_maximo": 1000},
+        {"medicamento": "Dipirona Sódica 500mg", "estoque_atual": 300, "estoque_maximo": 300},
         {"medicamento": "Ibuprofeno 600mg", "estoque_atual": 500, "estoque_maximo": 500},
         {"medicamento": "Amoxicilina 500mg", "estoque_atual": 300, "estoque_maximo": 300},
-        {"medicamento": "Soro Fisiológico 0.9%", "estoque_atual": 2000, "estoque_maximo": 2000},
-        {"medicamento": "Clonazepam 2mg", "estoque_atual": 150, "estoque_maximo": 150}
+        {"medicamento": "Soro Fisiológico 0.9%", "estoque_atual": 500, "estoque_maximo": 500},
+        {"medicamento": "Clonazepam 2mg", "estoque_atual": 300, "estoque_maximo": 300}
     ]
 
     for item in medicamentos_iniciais:
