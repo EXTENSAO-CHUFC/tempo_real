@@ -22,18 +22,24 @@ def main():
 
     
     print("\n[4/5] 📦 Preenchendo o estoque inicial...")
-    subprocess.run([sys.executable, "-m", "db.carga_inicial"])
+    subprocess.run(["poetry", "run", "python", "-m", "db.carga_inicial"])
 
     print("\n[5/5] 🖥️ Abrindo Dashboard, Producer e Consumer em novos terminais...")
     
     python_exe = sys.executable 
     
     
-    os.system(f'start "Consumer Redis (CH-UFC)" cmd /k "{python_exe} src/consumers/redis_cache/main.py"')
+    # Terminal 1: Consumidor do Redis
+    os.system('start "Consumer 1: Cache Redis (CH-UFC)" cmd /k "poetry run python -m src.consumers.redis_cache.main"')
     
-    os.system(f'start "Producer Simulador (CH-UFC)" cmd /k "{python_exe} -m src.producer.main"')
+    # Terminal 2: Novo Consumidor do PostgreSQL (Histórico)
+    os.system('start "Consumer 2: Historico Postgres (CH-UFC)" cmd /k "poetry run python -m src.consumers.historico.main"')
     
-    os.system(f'start "Dashboard (CH-UFC)" cmd /k "{python_exe} -m streamlit run src/dashboard/app.py"')
+    # Terminal 3: O Simulador (Producer)
+    os.system('start "Producer Simulador (CH-UFC)" cmd /k "poetry run python -m src.producer.main"')
+    
+    # Terminal 4: O Painel Visual (Streamlit)
+    os.system('start "Dashboard (CH-UFC)" cmd /k "poetry run streamlit run src/dashboard/app.py"')
 
     print("\n✅ Tudo rodando! As 3 janelas devem ter aparecido na sua tela.")
     print("O seu navegador vai abrir o Dashboard em instantes.")

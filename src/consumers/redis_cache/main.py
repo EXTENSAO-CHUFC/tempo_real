@@ -1,16 +1,12 @@
-import json
-import redis
-from kafka import KafkaConsumer
+from src.utils.kafka import get_kafka_consumer
+from src.utils.redis_client import get_redis_client
 
 def run_redis_consumer():
-    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-    consumer = KafkaConsumer(
-        'teste',
-        bootstrap_servers=['localhost:19090', 'localhost:19091', 'localhost:19092'],
-        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-    )
+    # Instanciamento limpo usando Utils
+    redis_client = get_redis_client()
+    consumer = get_kafka_consumer(topic='teste', group_id=None)
 
-    print(" Consumidor Redis iniciado!")
+    print("Consumidor Redis iniciado!")
     print("Ouvindo mensagens do Kafka para atualizar o cache em tempo real...\n")
 
     try:
@@ -25,11 +21,10 @@ def run_redis_consumer():
                 redis_client.set(f"estoque:{id_med}", 0)
                 novo_saldo = 0
                 
-            print(f" [REDIS] Medicamento {id_med} atualizado para: {novo_saldo} unidades")
+            print(f"⚡ [REDIS] Medicamento {id_med} atualizado para: {novo_saldo} unidades")
             
     except KeyboardInterrupt:
-        print("\n Encerrando o Consumidor Redis.")
-        
+        print("\n Encerrando o Consumidor Redis...")
     finally:
         consumer.close()
         print("Conexão com o Kafka encerrada.")
