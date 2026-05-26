@@ -1,10 +1,11 @@
 from src.utils.kafka import get_kafka_consumer
 from src.utils.db import get_db_session
 from db.models import EstoqueMedicamento
+from src.config.settings import settings
 
 def run_postgres_consumer():
     # Instanciamento limpo usando Utils
-    consumer = get_kafka_consumer(topic='teste', group_id='grupo_historico_postgres')
+    consumer = get_kafka_consumer(topic=settings.KAFKA_TOPIC_MOVIMENTACAO, group_id='grupo_historico_postgres')
     db = get_db_session()
 
     print("Consumidor Histórico (PostgreSQL) iniciado!")
@@ -21,12 +22,12 @@ def run_postgres_consumer():
             if medicamento:
                 medicamento.estoque_atual = max(0, medicamento.estoque_atual - qtd_retirada)
                 db.commit()
-                print(f"💾 [POSTGRES] Estoque de {medicamento.medicamento} atualizado no banco para: {medicamento.estoque_atual}")
+                print(f"[POSTGRES] Estoque de {medicamento.medicamento} atualizado no banco para: {medicamento.estoque_atual}")
             else:
-                print(f"⚠️ [POSTGRES] Medicamento com ID {id_med} não foi encontrado no banco.")
+                print(f"[POSTGRES] Medicamento com ID {id_med} não foi encontrado no banco.")
 
     except KeyboardInterrupt:
-        print("\nEncerrando o Consumidor Histórico graciosamente... 👋")
+        print("\nEncerrando o Consumidor Histórico...")
     finally:
         db.close()
         consumer.close()
