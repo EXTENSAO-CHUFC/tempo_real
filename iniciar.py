@@ -18,7 +18,7 @@ def main():
 
 
     print("\n [3/5] Criando a tabela do estoque de remédios...")
-    subprocess.run([sys.executable, "-m", "db.main"])
+    subprocess.run(["poetry", "run", "python", "-m", "db.main"])
 
     
     print("\n[4/5] 📦 Preenchendo o estoque inicial...")
