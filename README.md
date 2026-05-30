@@ -77,10 +77,48 @@ tempo_real/
 
 ### Pré-requisitos
 
-- [Python 3.12+](https://www.python.org/downloads/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Poetry](https://python-poetry.org/docs/#installation)
 
+### Clonar o repositório
+```powershell
+git clone <https://github.com/EXTENSAO-CHUFC/tempo_real.git>
+```
+### Instalar o pyenv e o Python 3.12
+
+O pyenv permite gerenciar múltiplas versões do Python sem conflitos. O projeto requer Python 3.12+ (versão exata: `3.12.10`, conforme o arquivo `.python-version`).
+
+#### Windows
+
+No Windows, utilize o [pyenv-win](https://github.com/pyenv-win/pyenv-win):
+
+```powershell
+# Instalar via PowerShell (como Administrador)
+Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"; &"./install-pyenv-win.ps1"
+```
+
+Reinicie o terminal e execute:
+
+```powershell
+# Instalar a versão do Python usada no projeto
+pyenv install 3.12.10
+pyenv local 3.12.10
+```
+
+### Instalar o Poetry
+
+O Poetry é o gerenciador de dependências e ambiente virtual do projeto.
+
+#### Windows
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -3 -
+```
+
+Após a instalação, reinicie o terminal e verifique:
+
+```bash
+poetry --version
+``` 
 ### 1. Configurar as Variáveis de Ambiente
 
 Copie o arquivo de exemplo e ajuste os valores se necessário:
@@ -109,8 +147,6 @@ mingw32-make run
 make run
 ```
 
-> ⚠️ **Nota:** O script `iniciar.py` utiliza comandos específicos do Windows (`os.system('start ...')`) para abrir terminais separados. Execução nativa em Linux/macOS requer adaptação desse script.
-
 ### 4. Encerrar o Sistema
 
 ```bash
@@ -134,6 +170,47 @@ make stop
 | `make help` | `mingw32-make help` | Lista todos os comandos disponíveis |
 
 ---
+## Testes Opcionais
+
+### 1. Alterar a Carga Inicial do Estoque
+Se você quiser testar com um volume maior de remédios ou adicionar novos itens à farmácia, basta editar a lista `medicamentos_iniciais` localizada no arquivo `db/queries.py`:
+
+```python
+# Arquivo: db/queries.py
+
+def popular_estoque_inicial(db: Session):
+    medicamentos_iniciais = [
+        # Altere os valores de estoque_atual e estoque_maximo, ou adicione novos itens:
+        {"medicamento": "Dipirona Sódica 500mg", "estoque_atual": 1000, "estoque_maximo": 1000},
+        {"medicamento": "Ibuprofeno 600mg", "estoque_atual": 500, "estoque_maximo": 500},
+        {"medicamento": "Amoxicilina 500mg", "estoque_atual": 300, "estoque_maximo": 300},
+        # ...
+    ]
+
+```
+
+> **Obs:** Caso o banco de dados já tenha sido populado, você precisará recriar o container do PostgreSQL (`make clean` seguido de `make run`) para que as novas configurações de carga inicial tenham efeito, já que o sistema ignora duplicatas.
+
+### 2. Modificar o Volume de Retirada (Simulador)
+
+Por padrão, o simulador (*Producer*) escolhe um medicamento aleatório e retira de 1 a 15 unidades por ciclo. Para acelerar o consumo e forçar os itens a entrarem em status 🟡 Atenção ou 🔴 Crítico mais rápido, você pode aumentar esse intervalo no arquivo `src/producer/extract.py`:
+
+```python
+# Arquivo: src/producer/extract.py
+
+def simular_requisicao(db: Session):
+    # ...
+    escolhido = random.choice(medicamentos)
+    
+    # Altere o intervalo abaixo para simular picos de consumo (ex: 50 a 100 unidades)
+    qtd_retirada = random.randint(1, 15) 
+    # ...
+
+```
+
+Nenhuma reinicialização do banco é necessária para essa alteração. Basta fechar o terminal do Producer e rodar o projeto novamente para que ele comece a drenar o estoque com os novos valores.
+
+
 
 ## 👨‍💻 Autor
 
