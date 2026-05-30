@@ -14,7 +14,7 @@ def simular_requisicao(db: Session):
         return None 
 
     escolhido = random.choice(medicamentos)
-    qtd_retirada = random.randint(1, 15)
+    qtd_retirada = random.randint(1, 20)
     
     # garante que não vai tentar tirar mais do que tem disponível
     if qtd_retirada > escolhido.estoque_atual:
