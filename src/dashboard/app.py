@@ -3,7 +3,7 @@ import sys
 import os
 import pandas as pd
 import time
-
+import json 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
@@ -37,6 +37,18 @@ def carregar_dados():
     finally:
         db.close()
 
+def carregar_feed_tempo_real():
+    """Busca os últimos eventos inseridos na lista do Redis"""
+    redis_client = get_redis_client()
+    logs = redis_client.lrange("feed_movimentacoes", 0, -1)
+    
+    if not logs:
+        return pd.DataFrame() 
+        
+    dados = [json.loads(log) for log in logs]
+    return pd.DataFrame(dados)
+
+
 def aplicar_regra_semaforo(linha):
     maximo = linha['Estoque Máximo']
     porcentagem = (linha['Estoque Atual'] / maximo) if maximo > 0 else 0
@@ -54,8 +66,6 @@ def aplicar_regra_semaforo(linha):
     return pd.Series([f"{porcentagem*100:.1f}%", status, peso, porcentagem])
 
 
-#Logo e a Timestamp de atualização
-
 def main():
     with st.sidebar:
         try:
@@ -68,7 +78,6 @@ def main():
         
         hora_atual = datetime.now().strftime("%H:%M:%S")
         st.success(f"⏱️ Última atualização:\n\n**{hora_atual}**")
-
 
     st.title("🏥 Central de Monitoramento de Estoque")
     st.markdown("Visão em tempo real da disponibilidade de medicamentos na farmácia do CH-UFC.")
@@ -101,6 +110,27 @@ def main():
 
         st.subheader("📦 Detalhamento do Estoque")
         st.dataframe(df_estoque, use_container_width=True, hide_index=True)
+
+        
+        st.divider()
+        st.subheader("⏱️ Últimas Saídas (Feed Dinâmico)")
+        df_feed = carregar_feed_tempo_real()
+        
+        if not df_feed.empty:
+            st.dataframe(
+                df_feed, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "Horário": st.column_config.TextColumn("Horário", width="small"),
+                    "ID": st.column_config.NumberColumn("ID", width="small"),
+                    "Qtd Saída": st.column_config.NumberColumn("Qtd (un.)", width="small"),
+                    "Medicamento": st.column_config.TextColumn("Medicamento", width="large"),
+                }
+            )
+        else:
+            st.info("Aguardando novas movimentações na farmácia...")
+       
 
     else:
         st.warning("Nenhum medicamento encontrado no banco de dados.")
