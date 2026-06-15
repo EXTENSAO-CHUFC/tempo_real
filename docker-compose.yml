@@ -1,6 +1,8 @@
 version: '3.8'
-#OBS: Criei 3 brokers mas deixei o replication factor para 1 nesse primeiro momento
-#Foram Criadas as imagens do Kafka(sem Zookeeper), Redis(Não utilizado agora) e Postgres(Para o teste)  
+
+# OBS: Criei 3 brokers mas deixei o replication factor para 1 nesse primeiro momento
+# Foram Criadas as imagens do Kafka(sem Zookeeper), Redis(Não utilizado agora) e Postgres(Para o teste)  
+
 services:
   kafka1:
     image: apache/kafka:3.7.0
@@ -69,7 +71,6 @@ services:
       POSTGRES_PASSWORD: adminpassword
       POSTGRES_DB: farmacia_db
     volumes:
-      # removi a linha do innit.sql, agora só o volume de dados persiste.
       - postgres-data:/var/lib/postgresql/data
       
   redis:
@@ -79,6 +80,64 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+
+  # ========================================================
+  # --- SERVIÇOS PYTHON CONTAINERIZADOS (O SEU CÓDIGO) ---
+  # ========================================================
+
+  consumer_redis:
+    build: .
+    container_name: app_consumer_redis
+    restart: on-failure
+    command: python -m src.consumers.redis_cache.main
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+    depends_on:
+      - redis
+      - kafka1
+
+  consumer_historico:
+    build: .
+    container_name: app_consumer_historico
+    restart: on-failure
+    command: python -m src.consumers.historico.main
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+    depends_on:
+      - postgres
+      - kafka1
+
+  producer_simulador:
+    build: .
+    container_name: app_producer_simulador
+    restart: on-failure
+    command: python -m src.producer.main
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+    depends_on:
+      - postgres
+      - kafka1
+
+  dashboard_streamlit:
+    build: .
+    container_name: app_dashboard_streamlit
+    command: streamlit run src/dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
 
 volumes:
   kafka1-data:

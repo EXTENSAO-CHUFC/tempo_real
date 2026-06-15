@@ -1,49 +1,32 @@
-import subprocess
-import time
 import os
-import sys
+import time
+import webbrowser
+import platform
 
 def main():
-    print("===================================================")
-    print(" Iniciando o Sistema de Monitoramento CH-UFC...")
-    print("===================================================\n")
-
+    print("🚀 Iniciando a infraestrutura da Farmácia CH-UFC (Docker)...")
     
-    print("[1/5] 🐳 Subindo Bancos e Kafka via Docker...")
-    subprocess.run(["docker-compose", "up", "-d"])
-
+    # 1. Sobe tudo silenciosamente em background (-d)
+    os.system("docker compose up -d")
     
-    print("\n[2/5] ⏳ Aguardando 10 segundos para a infraestrutura estabilizar...")
+    print("\n⏳ Aguardando os serviços aquecerem (10 segundos)...")
+    # Dá tempo para o Kafka e o Postgres respirarem
     time.sleep(10)
-
-
-    print("\n [3/5] Criando a tabela do estoque de remédios...")
-    subprocess.run(["poetry", "run", "python", "-m", "db.main"])
-
     
-    print("\n[4/5] 📦 Preenchendo o estoque inicial...")
-    subprocess.run(["poetry", "run", "python", "-m", "db.carga_inicial"])
-
-    print("\n[5/5] 🖥️ Abrindo Dashboard, Producer e Consumer em novos terminais...")
+    print("🌐 Redirecionando para o Dashboard...")
+    url = "http://localhost:8501"
     
-    python_exe = sys.executable 
-    
-    
-    # Terminal 1: Consumidor do Redis
-    os.system('start "Consumer 1: Cache Redis (CH-UFC)" cmd /k "poetry run python -m src.consumers.redis_cache.main"')
-    
-    # Terminal 2: Novo Consumidor do PostgreSQL (Histórico)
-    os.system('start "Consumer 2: Historico Postgres (CH-UFC)" cmd /k "poetry run python -m src.consumers.historico.main"')
-    
-    # Terminal 3: O Simulador (Producer)
-    os.system('start "Producer Simulador (CH-UFC)" cmd /k "poetry run python -m src.producer.main"')
-    
-    # Terminal 4: O Painel Visual (Streamlit)
-    os.system('start "Dashboard (CH-UFC)" cmd /k "poetry run streamlit run src/dashboard/app.py"')
-
-    print("\n✅ Tudo rodando! As 3 janelas devem ter aparecido na sua tela.")
-    print("O seu navegador vai abrir o Dashboard em instantes.")
-    print("Você pode fechar esta janela principal ou deixá-la aberta.")
+    # Tenta abrir o navegador (Trata a diferença entre Windows puro e WSL)
+    if "microsoft-standard" in platform.uname().release.lower():
+        # Estamos dentro do WSL
+        os.system(f"explorer.exe {url} > /dev/null 2>&1")
+    else:
+        # Estamos num sistema normal
+        webbrowser.open(url)
+        
+    print("\n✅ Sistema rodando perfeitamente em background!")
+    print("👉 Para desligar tudo depois, digite: docker compose down")
+    print("👉 Para ver os logs dos robôs, digite: docker compose logs -f producer_simulador consumer_redis")
 
 if __name__ == "__main__":
     main()
