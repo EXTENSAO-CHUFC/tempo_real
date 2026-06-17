@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
 from db.models import EstoqueMedicamento
-import redis
-
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+from src.utils.redis_client import get_redis_client # <-- Usa o seu cliente configurado!
 
 def popular_estoque_inicial(db: Session):
+    # Inicializa a conexão com o Redis de forma dinâmica
+    redis_client = get_redis_client()
+    
     medicamentos_iniciais = [
         {"medicamento": "Dipirona Sódica 500mg", "estoque_atual": 300, "estoque_maximo": 300},
         {"medicamento": "Ibuprofeno 600mg", "estoque_atual": 500, "estoque_maximo": 500},
@@ -14,7 +15,6 @@ def popular_estoque_inicial(db: Session):
     ]
 
     for item in medicamentos_iniciais:
-        # duplicidade verificada
         existe = db.query(EstoqueMedicamento).filter(EstoqueMedicamento.medicamento == item["medicamento"]).first()
         
         if not existe:
@@ -31,7 +31,4 @@ def popular_estoque_inicial(db: Session):
     for med in todos_meds:
         redis_client.set(f"estoque:{med.id}", med.estoque_atual)
    
-        
     print("\n📦 Operação de estoque e cache concluída com sucesso!")
-
-   

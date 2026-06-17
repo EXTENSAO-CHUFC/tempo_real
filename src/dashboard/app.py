@@ -8,6 +8,7 @@ import json
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from datetime import datetime
+from sqlalchemy.exc import ProgrammingError, OperationalError # <-- NOVA IMPORTAÇÃO
 from src.utils.db import get_db_session
 from src.utils.redis_client import get_redis_client
 from db.models import EstoqueMedicamento
@@ -34,6 +35,9 @@ def carregar_dados():
                 "Estoque Máximo": med.estoque_maximo
             })
         return pd.DataFrame(dados)
+    except (ProgrammingError, OperationalError): # <-- TRATAMENTO DO ERRO AQUI
+        db.rollback()
+        return None
     finally:
         db.close()
 
@@ -47,7 +51,6 @@ def carregar_feed_tempo_real():
         
     dados = [json.loads(log) for log in logs]
     return pd.DataFrame(dados)
-
 
 def aplicar_regra_semaforo(linha):
     maximo = linha['Estoque Máximo']
@@ -64,7 +67,6 @@ def aplicar_regra_semaforo(linha):
         peso = 1
         
     return pd.Series([f"{porcentagem*100:.1f}%", status, peso, porcentagem])
-
 
 def main():
     with st.sidebar:
@@ -87,6 +89,13 @@ def main():
 
     df_estoque = carregar_dados()
 
+    # <-- PROTEÇÃO ADICIONADA AQUI: Se a tabela não existir ainda, ele avisa e espera
+    if df_estoque is None:
+        st.warning("⏳ Aguardando a inicialização do banco de dados e a criação das tabelas...")
+        time.sleep(4)
+        st.rerun()
+        return # Interrompe a função main aqui para não executar o resto do código abaixo
+
     if not df_estoque.empty:
         df_estoque[['Ocupação (%)', 'Status', 'Peso_Ordem', 'Valor_Pct']] = df_estoque.apply(aplicar_regra_semaforo, axis=1)
 
@@ -102,7 +111,6 @@ def main():
         col1.metric("Total de Tipos de Medicamentos", len(df_estoque))
         col2.metric("Medicamentos em Atenção", qtd_atencao)
         
-        
         delta_msg = f"-{qtd_critico} faltas urgentes" if qtd_critico > 0 else "Estoque Normal"
         col3.metric("🚨 Alertas Críticos", qtd_critico, delta=delta_msg, delta_color="inverse")
 
@@ -110,7 +118,6 @@ def main():
 
         st.subheader("📦 Detalhamento do Estoque")
         st.dataframe(df_estoque, use_container_width=True, hide_index=True)
-
         
         st.divider()
         st.subheader("⏱️ Últimas Saídas (Feed Dinâmico)")
@@ -130,7 +137,6 @@ def main():
             )
         else:
             st.info("Aguardando novas movimentações na farmácia...")
-       
 
     else:
         st.warning("Nenhum medicamento encontrado no banco de dados.")

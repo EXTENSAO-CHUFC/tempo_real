@@ -1,7 +1,11 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+
 from db.queries import popular_estoque_inicial
 from src.utils.db import get_db_session
 from src.utils.redis_client import get_redis_client
-
 
 def run():
     db = get_db_session()

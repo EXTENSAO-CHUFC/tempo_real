@@ -9,8 +9,9 @@
 # ==============================
 
 run:
-	@echo " Chamando o orquestrador para iniciar o sistema..."
+	@echo "🚀 Chamando o orquestrador para iniciar o sistema..."
 	python iniciar.py
+	
 
 stop:
 	@echo " Chamando o orquestrador para desligar o sistema..."
