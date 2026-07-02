@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+'''from sqlalchemy.orm import Session
 from db.models import EstoqueMedicamento
 from src.utils.redis_client import get_redis_client # <-- Usa o seu cliente configurado!
 
@@ -31,4 +31,4 @@ def popular_estoque_inicial(db: Session):
     for med in todos_meds:
         redis_client.set(f"estoque:{med.id}", med.estoque_atual)
    
-    print("\n📦 Operação de estoque e cache concluída com sucesso!")
+    print("\n📦 Operação de estoque e cache concluída com sucesso!") '''

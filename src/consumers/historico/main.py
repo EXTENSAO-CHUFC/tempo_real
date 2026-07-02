@@ -1,6 +1,6 @@
 from src.utils.kafka import get_kafka_consumer
 from src.utils.db import get_db_session
-from db.models import EstoqueMedicamento
+from src.models.estoque import Lote, Movimentacao, TipoMovimentacao
 from src.config.settings import settings
 
 def run_postgres_consumer():
@@ -9,22 +9,30 @@ def run_postgres_consumer():
     db = get_db_session()
 
     print("Consumidor Histórico (PostgreSQL) iniciado!")
-    print("Ouvindo mensagens do Kafka para atualizar o Banco de Dados oficial...\n")
+    print("Ouvindo mensagens do Kafka para registrar movimentações no Banco de Dados oficial...\n")
 
     try:
         for mensagem in consumer:
             evento = mensagem.value
-            id_med = evento['id_medicamento']
-            qtd_retirada = evento['quantidade']
+            lote_id = evento['lote_id']
+            tipo = evento['tipo_movimento']
+            quantidade = evento['quantidade']
+            origem_destino = evento.get('origem_destino')
 
-            medicamento = db.query(EstoqueMedicamento).filter(EstoqueMedicamento.id == id_med).first()
+            lote = db.query(Lote).filter(Lote.id == lote_id).first()
 
-            if medicamento:
-                medicamento.estoque_atual = max(0, medicamento.estoque_atual - qtd_retirada)
+            if lote:
+                movimentacao = Movimentacao(
+                    lote_id=lote_id,
+                    tipo=TipoMovimentacao(tipo),
+                    quantidade=quantidade,
+                    origem_destino=origem_destino,
+                )
+                db.add(movimentacao)
                 db.commit()
-                print(f"[POSTGRES] Estoque de {medicamento.medicamento} atualizado no banco para: {medicamento.estoque_atual}")
+                print(f"[POSTGRES] Movimentação registrada: {tipo} de {quantidade} unidades no lote {lote_id}")
             else:
-                print(f"[POSTGRES] Medicamento com ID {id_med} não foi encontrado no banco.")
+                print(f"[POSTGRES] Lote com ID {lote_id} não foi encontrado no banco.")
 
     except KeyboardInterrupt:
         print("\nEncerrando o Consumidor Histórico...")

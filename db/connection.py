@@ -6,9 +6,8 @@ engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# <-- MODIFICAÇÃO: Importa o modelo e manda o SQLAlchemy criar as tabelas faltantes
 try:
-    from db.models import EstoqueMedicamento
+    from src.models.estoque import Base
     Base.metadata.create_all(bind=engine)
 except ImportError:
     # Caso haja um problema de importação circular em outro lugar, ele apenas ignora
