@@ -209,6 +209,55 @@ services:
         max-size: "5m"
         max-file: "2"
 
+  consumer_monitoramento:
+    build: .
+    container_name: app_consumer_monitoramento
+    restart: on-failure
+    command: sh -c "sleep 15 && python -m src.consumers.monitoramento.main"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+      - KAFKA_TOPIC_REABASTECIMENTO=reabastecimento
+    depends_on:
+      - redis
+      - kafka1
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  jobs_scheduler:
+    build: .
+    container_name: app_jobs_scheduler
+    restart: on-failure
+    command: sh -c "sleep 15 && python -m src.jobs.scheduler"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+      - KAFKA_TOPIC_REABASTECIMENTO=reabastecimento
+    depends_on:
+      - postgres
+      - redis
+      - kafka1
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   dashboard_streamlit:
     build: .
     container_name: app_dashboard_streamlit
