@@ -24,5 +24,6 @@ class Settings:
     _kafka_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:19090,localhost:19091,localhost:19092")
     KAFKA_BOOTSTRAP_SERVERS = _kafka_servers.split(",")  # Transforma a string numa lista para o Kafka
     KAFKA_TOPIC_MOVIMENTACAO = os.getenv("KAFKA_TOPIC_MOVIMENTACAO", "teste")
+    KAFKA_TOPIC_REABASTECIMENTO = os.getenv("KAFKA_TOPIC_REABASTECIMENTO", "reabastecimento")
 
 settings = Settings()

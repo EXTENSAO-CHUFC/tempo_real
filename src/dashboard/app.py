@@ -48,6 +48,7 @@ def carregar_dados():
                 "Saldo Atual": saldo_atual,
                 "Estoque Mínimo": lote.medicamento.estoque_minimo,
                 "Estoque Máximo": lote.medicamento.estoque_maximo,
+                "Reabastecimento Automático": "⛔ Bloqueado" if lote.medicamento.bloqueio_reabastecimento else "✅ Ativo",
                 "Validade": lote.data_validade.strftime("%d/%m/%Y"),
             })
         return pd.DataFrame(dados)
@@ -71,7 +72,7 @@ def carregar_feed_tempo_real():
 
 
 def carregar_alertas_criticos():
-    """Busca os últimos alertas de lote zerado, gravados pelo consumer de monitoramento."""
+    """Busca os últimos alertas de estoque crítico, gravados pelo consumer de monitoramento."""
     redis_client = get_redis_client()
     alertas = redis_client.lrange("alertas_criticos", 0, -1)
 
@@ -82,28 +83,52 @@ def carregar_alertas_criticos():
     return pd.DataFrame(dados)
 
 
+def carregar_reabastecimentos_pendentes(df_estoque):
+    """
+    Lotes com pedido de reabastecimento em andamento (pedido publicado, aguardando entrega do fornecedor).
+    """
+    if df_estoque is None or df_estoque.empty:
+        return pd.DataFrame()
+
+    redis_client = get_redis_client()
+    pendentes = []
+    for _, linha in df_estoque.iterrows():
+        lote_id = linha["Lote ID"]
+        if redis_client.get(f"reabastecimento_pendente:lote:{lote_id}"):
+            pendentes.append({
+                "Lote ID": lote_id,
+                "Medicamento": linha["Medicamento"],
+                "Saldo Atual": linha["Saldo Atual"],
+                "Estoque Máximo": linha["Estoque Máximo"],
+            })
+
+    return pd.DataFrame(pendentes)
+
+
 def aplicar_regra_semaforo(linha):
-    minimo = linha['Estoque Mínimo']
     maximo = linha['Estoque Máximo']
     saldo = linha['Saldo Atual']
+    bloqueado = linha['Reabastecimento Automático'] == "⛔ Bloqueado"
 
-    # Status do semáforo continua relativo ao mínimo (crítico = perto de faltar)
-    porcentagem_minimo = (saldo / minimo) if minimo > 0 else 0
+    # Alinhado com o critério oficial usado pelo monitoramento (10% do máximo)
+    limiar_10pct = maximo * 0.10
+    porcentagem_ocupacao = (saldo / maximo) if maximo > 0 else 0
 
-    if porcentagem_minimo > 1.5:
-        status = "🟢 Seguro"
-        peso = 3
-    elif porcentagem_minimo >= 1.0:
+    if saldo <= limiar_10pct:
+        if bloqueado:
+            # Ex.: Clonazepam — crítico de propósito, nunca repõe sozinho
+            status = "⛔ Crítico (sem reposição automática)"
+        else:
+            status = "🔴 Crítico (< 10%)"
+        peso = 1
+    elif porcentagem_ocupacao < 0.5:
         status = "🟡 Atenção"
         peso = 2
     else:
-        status = "🔴 Crítico"
-        peso = 1
+        status = "🟢 Seguro"
+        peso = 3
 
-    # % de ocupação exibida é relativa ao máximo (capacidade física do lote)
-    porcentagem_ocupacao = (saldo / maximo) if maximo > 0 else 0
-
-    return pd.Series([f"{porcentagem_ocupacao*100:.0f}%", status, peso, porcentagem_minimo])
+    return pd.Series([f"{porcentagem_ocupacao*100:.0f}%", status, peso, porcentagem_ocupacao])
 
 
 def colorir_tipo_movimento(valor):
@@ -147,7 +172,7 @@ def main():
         df_estoque = df_estoque.sort_values(by=['Peso_Ordem', 'Valor_Pct'], ascending=[True, True])
         df_estoque = df_estoque.drop(columns=['Peso_Ordem', 'Valor_Pct'])
 
-        qtd_critico = len(df_estoque[df_estoque['Status'] == "🔴 Crítico"])
+        qtd_critico = len(df_estoque[df_estoque['Status'].str.contains("Crítico")])
         qtd_atencao = len(df_estoque[df_estoque['Status'] == "🟡 Atenção"])
 
         col1, col2, col3 = st.columns(3)
@@ -193,14 +218,20 @@ def main():
 
         st.divider()
 
-        # --- Alertas de lote zerado ---
-        st.subheader("🚨 Alertas de Estoque Zerado")
+        # --- Alertas de estoque crítico (≤ 10% do estoque_maximo) ---
+        st.subheader("🚨 Alertas de Estoque Crítico (≤ 10% do máximo)")
         df_alertas = carregar_alertas_criticos()
 
         if not df_alertas.empty:
             st.error(f"⚠️ {len(df_alertas)} alerta(s) de estoque crítico registrados.")
+
+            colunas_exibir = [c for c in [
+                "hora", "lote_id", "medicamento", "saldo", "estoque_maximo",
+                "limiar", "bloqueio_reabastecimento"
+            ] if c in df_alertas.columns]
+
             st.dataframe(
-                df_alertas,
+                df_alertas[colunas_exibir],
                 use_container_width=True,
                 hide_index=True,
                 column_config={
@@ -208,10 +239,26 @@ def main():
                     "lote_id": st.column_config.NumberColumn("Lote ID", width="small"),
                     "medicamento": st.column_config.TextColumn("Medicamento", width="large"),
                     "saldo": st.column_config.NumberColumn("Saldo", width="small"),
+                    "estoque_maximo": st.column_config.NumberColumn("Máximo", width="small"),
+                    "limiar": st.column_config.NumberColumn("Limiar (10%)", width="small"),
+                    "bloqueio_reabastecimento": st.column_config.CheckboxColumn("Bloqueado?", width="small"),
                 }
             )
         else:
-            st.success("Nenhum lote zerado no momento.")
+            st.success("Nenhum lote em estado crítico no momento.")
+
+        st.divider()
+
+        # --- Reabastecimentos em andamento (pedido publicado, aguardando entrega) ---
+        st.subheader("📨 Reabastecimentos em Andamento")
+        df_pendentes = carregar_reabastecimentos_pendentes(df_estoque)
+
+        if not df_pendentes.empty:
+            st.info(f"⏳ {len(df_pendentes)} pedido(s) de reabastecimento aguardando entrega "
+                    f"do fornecedor (30–60s simulados pelo scheduler).")
+            st.dataframe(df_pendentes, use_container_width=True, hide_index=True)
+        else:
+            st.caption("Nenhum reabastecimento pendente no momento.")
 
     else:
         st.warning("Nenhum lote encontrado no banco de dados.")

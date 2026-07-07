@@ -14,5 +14,9 @@ def get_kafka_consumer(topic: str, group_id: str = None):
         topic,
         bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
         group_id=group_id,
+        # 'earliest' garante que mensagens publicadas antes do consumer estar ativo não sejam perdidas
+        # um pedido publicado antes do scheduler/monitoramento estarem no ar
+        # não pode simplesmente ser perdido.
+        auto_offset_reset='earliest',
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )

@@ -1,16 +1,8 @@
-"""
-Modelo de domínio do sistema de estoque (CH-UFC).
-Normalizado até a 3FN:
-  - Medicamento  : dados de catálogo (não se repetem por lote)
-  - Lote         : dados físicos/validade (FK para Medicamento)
-  - Movimentacao : eventos de entrada/saída (FK para Lote)
-"""
-
 import enum
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Column, Integer, String, Date, DateTime, Enum, ForeignKey, CheckConstraint
+    Column, Integer, String, Date, DateTime, Enum, ForeignKey, CheckConstraint, Boolean
 )
 from sqlalchemy.orm import relationship, declarative_base
 
@@ -27,18 +19,18 @@ class TipoMovimentacao(enum.Enum):
 
 
 class Medicamento(Base):
-    """
-    Tabela de catálogo. Cada medicamento é cadastrado uma única vez,
-    independente de quantos lotes/movimentações existam.
-    """
     __tablename__ = "medicamentos"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String(150), nullable=False)
     principio_ativo = Column(String(150), nullable=False)
-    unidade_medida = Column(String(20), nullable=False)  # ex: 'comprimido', 'ml', 'frasco'
+    unidade_medida = Column(String(20), nullable=False)  
     estoque_minimo = Column(Integer, nullable=False, default=0)
-    estoque_maximo = Column(Integer, nullable=False, default=200)  # capacidade máxima por lote, evita entradas sem limite
+    estoque_maximo = Column(Integer, nullable=False, default=200)  
+
+    
+    # Usado para simular, propositalmente, um medicamento que vai zerar (Clonazepam).
+    bloqueio_reabastecimento = Column(Boolean, nullable=False, default=False)
 
     # Um medicamento -> muitos lotes (1:N)
     lotes = relationship(
@@ -52,11 +44,6 @@ class Medicamento(Base):
 
 
 class Lote(Base):
-    """
-    Cada lote físico recebido de um medicamento. Guarda validade e
-    número de lote — informações que variam por remessa, por isso
-    não ficam em Medicamento (evita repetição/anomalia de atualização).
-    """
     __tablename__ = "lotes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -87,13 +74,6 @@ class Lote(Base):
 
 
 class Movimentacao(Base):
-    """
-    Tabela de fatos: cada entrada OU saída é uma linha aqui.
-    O campo 'tipo' discrimina o evento — não há tabelas separadas
-    para entrada/saída porque os atributos são idênticos; separar
-    violaria a normalização (esquemas duplicados, saldo difícil de
-    calcular, risco de inconsistência entre as duas tabelas).
-    """
     __tablename__ = "movimentacoes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
